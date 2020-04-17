@@ -1,6 +1,7 @@
 import React from "react";
 import ReactDOM from "react-dom";
 import { combineReducers, createStore } from "redux";
+import { Provider, connect } from "react-redux";
 import "./index.css";
 
 // action types
@@ -104,12 +105,23 @@ function TodoItem({ todo, onToggleTodo }) {
 
 function render() {
   ReactDOM.render(
-    <TodoApp
-      todos={store.getState().todoState}
-      onToggleTodo={(id) => store.dispatch(doToggleTodo(id))}
-    />,
+    <Provider store={store}>
+      <ConnectedTodoApp />
+    </Provider>,
     document.getElementById("root")
   );
 }
-store.subscribe(render);
+function mapStateToProps(state) {
+  return {
+    todos: state.todoState,
+  };
+}
+function mapDispatchToProps(dispatch) {
+  return {
+    onToggleTodo: (id) => dispatch(doToggleTodo(id)),
+  };
+}
+
+const ConnectedTodoApp = connect(mapStateToProps, mapDispatchToProps)(TodoApp);
+
 render();
