@@ -1,7 +1,8 @@
 import React from "react";
 import ReactDOM from "react-dom";
-import { combineReducers, createStore } from "redux";
+import { applyMiddleware, combineReducers, createStore } from "redux";
 import { Provider, connect } from "react-redux";
+import { createLogger } from "redux-logger";
 import "./index.css";
 
 // action types
@@ -12,7 +13,7 @@ const FILTER_SET = "FILTER_SET";
 // reducers
 const todos = [
   { id: "0", name: "learn redux" },
-  { id: "1", name: "learn mobx" },
+  { id: "1", name: "learn mobx" }
 ];
 function todoReducer(state = todos, action) {
   switch (action.type) {
@@ -54,28 +55,29 @@ function applySetFilter(state, action) {
 function doAddTodo(id, name) {
   return {
     type: TODO_ADD,
-    todo: { id, name },
+    todo: { id, name }
   };
 }
 function doToggleTodo(id) {
   return {
     type: TODO_TOGGLE,
-    todo: { id },
+    todo: { id }
   };
 }
 function doSetFilter(filter) {
   return {
     type: FILTER_SET,
-    filter,
+    filter
   };
 }
 
 // store
 const rootReducer = combineReducers({
   todoState: todoReducer,
-  filterState: filterReducer,
+  filterState: filterReducer
 });
-const store = createStore(rootReducer);
+const logger = createLogger();
+const store = createStore(rootReducer, undefined, applyMiddleware(logger));
 
 // view layer
 
@@ -113,12 +115,12 @@ function render() {
 }
 function mapStateToProps(state) {
   return {
-    todos: state.todoState,
+    todos: state.todoState
   };
 }
 function mapDispatchToProps(dispatch) {
   return {
-    onToggleTodo: (id) => dispatch(doToggleTodo(id)),
+    onToggleTodo: (id) => dispatch(doToggleTodo(id))
   };
 }
 const ConnectedTodoList = connect(mapStateToProps)(TodoList);
