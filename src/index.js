@@ -134,14 +134,23 @@ function render() {
     document.getElementById("root")
   );
 }
+
+// selectors
+function getTodosAsIds(state) {
+  return state.todoState.ids;
+}
+function getTodo(state, todoId) {
+  return state.todoState.entities[todoId];
+}
+
 function mapStateToPropsList(state) {
   return {
-    todosAsIds: state.todoState.ids
+    todosAsIds: getTodosAsIds(state)
   };
 }
 function mapStateToPropsItem(state, props) {
   return {
-    todo: state.todoState.entities[props.todoId]
+    todo: getTodo(state, props.todoId)
   };
 }
 function mapDispatchToPropsItem(dispatch) {
