@@ -1,12 +1,14 @@
 import React from "react";
 import { connect } from "react-redux";
-import { doToggleTodo, doAddTodo } from "../state";
+import { doToggleTodo, doAddTodo, doSetFilter } from "../state";
 import { TodoCreate } from "./todocreate";
+import { Filter, VISIBILITY_FILTERS } from "./filter";
 import uuid from "uuid/v4";
 
 export function TodoApp() {
   return (
     <div>
+      <ConnectedFilter />
       <ConnectedTodoCreate />
       <ConnectedTodoList />
     </div>
@@ -37,7 +39,10 @@ function TodoItem({ todo, onToggleTodo }) {
 
 // selectors
 function getTodosAsIds(state) {
-  return state.todoState.ids;
+  return state.todoState.ids
+    .map((id) => state.todoState.entities[id])
+    .filter(VISIBILITY_FILTERS[state.filterState])
+    .map((todo) => todo.id);
 }
 function getTodo(state, todoId) {
   return state.todoState.entities[todoId];
@@ -64,6 +69,11 @@ function mapDispatchToPropsCreate(dispatch) {
     onAddTodo: (name) => dispatch(doAddTodo(uuid(), name))
   };
 }
+function mapDispatchToPropsFilter(dispatch) {
+  return {
+    onSetFilter: (filterType) => dispatch(doSetFilter(filterType))
+  };
+}
 
 //connect views to state in redux store
 const ConnectedTodoList = connect(mapStateToPropsList)(TodoList);
@@ -72,3 +82,4 @@ const ConnectedTodoItem = connect(
   mapDispatchToPropsItem
 )(TodoItem);
 const ConnectedTodoCreate = connect(null, mapDispatchToPropsCreate)(TodoCreate);
+const ConnectedFilter = connect(null, mapDispatchToPropsFilter)(Filter);
