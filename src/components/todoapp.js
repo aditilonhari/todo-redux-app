@@ -1,9 +1,16 @@
 import React from "react";
 import { connect } from "react-redux";
-import { doToggleTodo } from "../state";
+import { doToggleTodo, doAddTodo } from "../state";
+import { TodoCreate } from "./todocreate";
+import uuid from "uuid/v4";
 
 export function TodoApp() {
-  return <ConnectedTodoList />;
+  return (
+    <div>
+      <ConnectedTodoCreate />
+      <ConnectedTodoList />
+    </div>
+  );
 }
 
 function TodoList({ todosAsIds }) {
@@ -52,6 +59,11 @@ function mapDispatchToPropsItem(dispatch) {
     onToggleTodo: (id) => dispatch(doToggleTodo(id))
   };
 }
+function mapDispatchToPropsCreate(dispatch) {
+  return {
+    onAddTodo: (name) => dispatch(doAddTodo(uuid(), name))
+  };
+}
 
 //connect views to state in redux store
 const ConnectedTodoList = connect(mapStateToPropsList)(TodoList);
@@ -59,3 +71,4 @@ const ConnectedTodoItem = connect(
   mapStateToPropsItem,
   mapDispatchToPropsItem
 )(TodoItem);
+const ConnectedTodoCreate = connect(null, mapDispatchToPropsCreate)(TodoCreate);
