@@ -1,7 +1,8 @@
 import React from "react";
 import { connect } from "react-redux";
-import { doToggleTodo, doAddTodo, doSetFilter } from "../state";
+import { doToggleTodo, doSetFilter, doAddTodoWithNotification } from "../state";
 import { TodoCreate } from "./todocreate";
+import { Notifications } from "./notifications";
 import { Filter, VISIBILITY_FILTERS } from "./filter";
 import uuid from "uuid/v4";
 
@@ -11,6 +12,7 @@ export function TodoApp() {
       <ConnectedFilter />
       <ConnectedTodoCreate />
       <ConnectedTodoList />
+      <ConnectedNotifications />
     </div>
   );
 }
@@ -47,6 +49,12 @@ function getTodosAsIds(state) {
 function getTodo(state, todoId) {
   return state.todoState.entities[todoId];
 }
+function getNotifications(state) {
+  return getArrayOfObject(state.notificationState);
+}
+function getArrayOfObject(object) {
+  return Object.keys(object).map((key) => object[key]);
+}
 
 //connect arguments
 function mapStateToPropsList(state) {
@@ -66,7 +74,7 @@ function mapDispatchToPropsItem(dispatch) {
 }
 function mapDispatchToPropsCreate(dispatch) {
   return {
-    onAddTodo: (name) => dispatch(doAddTodo(uuid(), name))
+    onAddTodo: (name) => dispatch(doAddTodoWithNotification(uuid(), name))
   };
 }
 function mapDispatchToPropsFilter(dispatch) {
@@ -74,6 +82,14 @@ function mapDispatchToPropsFilter(dispatch) {
     onSetFilter: (filterType) => dispatch(doSetFilter(filterType))
   };
 }
+function mapStateToPropsNotifications(state, props) {
+  return {
+    notifications: getNotifications(state)
+  };
+}
+const ConnectedNotifications = connect(mapStateToPropsNotifications)(
+  Notifications
+);
 
 //connect views to state in redux store
 const ConnectedTodoList = connect(mapStateToPropsList)(TodoList);

@@ -1,6 +1,7 @@
 import { applyMiddleware, combineReducers, createStore } from "redux";
 import { createLogger } from "redux-logger";
 import { schema, normalize } from "normalizr";
+import thunk from "redux-thunk";
 
 // action types
 const TODO_ADD = "TODO_ADD";
@@ -23,6 +24,7 @@ const todos = [
   { id: "10", name: "Hacker News with Redux" }
 ];
 
+//TODO REDUCER
 function todoReducer(state = initialTodoState, action) {
   switch (action.type) {
     case TODO_ADD: {
@@ -49,6 +51,7 @@ function applyToggleTodo(state, action) {
   return { ...state, entities };
 }
 
+//FILTER REDUCER
 function filterReducer(state = "SHOW_ALL", action) {
   switch (action.type) {
     case FILTER_SET: {
@@ -62,6 +65,28 @@ function applySetFilter(state, action) {
   return action.filter;
 }
 
+//NOTIFICATION REDUCER
+function notificationReducer(state = {}, action) {
+  switch (action.type) {
+    case TODO_ADD: {
+      return applySetNotifyAboutAddTodo(state, action);
+    }
+    case NOTIFICATION_HIDE: {
+      return applyRemoveNotification(state, action);
+    }
+    default:
+      return state;
+  }
+}
+
+function applySetNotifyAboutAddTodo(state, action) {
+  const { name, id } = action.todo;
+  return { ...state, [id]: "Todo Created: " + name };
+}
+function applyRemoveNotification(state, action) {
+  const { [action.id]: notificationToRemove, ...restNotifications } = state;
+  return restNotifications;
+}
 function doShowNotification(text, id) {
   return {
     type: NOTIFICATION_SHOW,
@@ -104,27 +129,38 @@ export function doSetFilter(filter) {
     filter
   };
 }
+export function doAddTodoWithNotification(id, name) {
+  return function (dispatch) {
+    dispatch(doAddTodo(id, name));
+    setTimeout(function () {
+      dispatch(doHideNotification(id));
+    }, 5000);
+  };
+}
 
 // store
 const rootReducer = combineReducers({
   todoState: todoReducer,
-  filterState: filterReducer
+  filterState: filterReducer,
+  notificationState: notificationReducer
 });
 const logger = createLogger();
 export const Store = createStore(
   rootReducer,
   undefined,
-  applyMiddleware(logger)
+  applyMiddleware(thunk, logger)
 );
-// extracted functionality
-let naiveId = 0;
-function showNotificationWithDelay(dispatch, text) {
-  dispatch(doShowNotification(text, naiveId));
-  setTimeout(() => {
-    dispatch(doHideNotification(naiveId));
-  }, 1000);
-  naiveId++;
-}
 
-// usage
-showNotificationWithDelay(Store.dispatch, "Todo created.");
+// // with thunk function
+// let naiveId = 0;
+// function showNotificationWithDelay(text) {
+//   return function (dispatch) {
+//     dispatch(doShowNotification(text, naiveId));
+//     setTimeout(() => {
+//       dispatch(doHideNotification(naiveId));
+//     }, 1000);
+//     naiveId++;
+//   };
+// }
+
+// Store.dispatch(showNotificationWithDelay("Todo created."));
