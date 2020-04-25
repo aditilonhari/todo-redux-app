@@ -1,6 +1,8 @@
 import React from "react";
+import { connect } from "react-redux";
+import { doSetFilter } from "../state";
 
-export function Filter({ onSetFilter }) {
+function Filter({ onSetFilter }) {
   return (
     <div>
       Show
@@ -23,3 +25,10 @@ export const VISIBILITY_FILTERS = {
   SHOW_INCOMPLETED: (item) => item.completed,
   SHOW_ALL: (item) => true
 };
+
+function mapDispatchToPropsFilter(dispatch) {
+  return {
+    onSetFilter: (filterType) => dispatch(doSetFilter(filterType))
+  };
+}
+export const ConnectedFilter = connect(null, mapDispatchToPropsFilter)(Filter);
