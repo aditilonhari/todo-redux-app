@@ -6,6 +6,8 @@ import { schema, normalize } from "normalizr";
 const TODO_ADD = "TODO_ADD";
 const TODO_TOGGLE = "TODO_TOGGLE";
 const FILTER_SET = "FILTER_SET";
+const NOTIFICATION_SHOW = "NOTIFICATION_SHOW";
+const NOTIFICATION_HIDE = "NOTIFICATION_HIDE";
 
 // reducers
 const todos = [
@@ -46,6 +48,7 @@ function applyToggleTodo(state, action) {
   const entities = { ...state.entities, [id]: toggledTodo };
   return { ...state, entities };
 }
+
 function filterReducer(state = "SHOW_ALL", action) {
   switch (action.type) {
     case FILTER_SET: {
@@ -57,6 +60,20 @@ function filterReducer(state = "SHOW_ALL", action) {
 }
 function applySetFilter(state, action) {
   return action.filter;
+}
+
+function doShowNotification(text, id) {
+  return {
+    type: NOTIFICATION_SHOW,
+    text,
+    id
+  };
+}
+function doHideNotification(id) {
+  return {
+    type: NOTIFICATION_HIDE,
+    id
+  };
 }
 
 // schemas
@@ -99,3 +116,15 @@ export const Store = createStore(
   undefined,
   applyMiddleware(logger)
 );
+// extracted functionality
+let naiveId = 0;
+function showNotificationWithDelay(dispatch, text) {
+  dispatch(doShowNotification(text, naiveId));
+  setTimeout(() => {
+    dispatch(doHideNotification(naiveId));
+  }, 1000);
+  naiveId++;
+}
+
+// usage
+showNotificationWithDelay(Store.dispatch, "Todo created.");
