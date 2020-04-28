@@ -1,14 +1,15 @@
 import { applyMiddleware, combineReducers, createStore } from "redux";
 import { createLogger } from "redux-logger";
 import { schema, normalize } from "normalizr";
-import thunk from "redux-thunk";
+import createSagaMiddleware from "redux-saga";
+import { put, takeEvery, delay } from "redux-saga/effects";
 
 // action types
 const TODO_ADD = "TODO_ADD";
 const TODO_TOGGLE = "TODO_TOGGLE";
 const FILTER_SET = "FILTER_SET";
-const NOTIFICATION_SHOW = "NOTIFICATION_SHOW";
 const NOTIFICATION_HIDE = "NOTIFICATION_HIDE";
+const TODO_ADD_WITH_NOTIFICATION = "TODO_ADD_WITH_NOTIFICATION";
 
 // reducers
 const todos = [
@@ -87,19 +88,6 @@ function applyRemoveNotification(state, action) {
   const { [action.id]: notificationToRemove, ...restNotifications } = state;
   return restNotifications;
 }
-function doShowNotification(text, id) {
-  return {
-    type: NOTIFICATION_SHOW,
-    text,
-    id
-  };
-}
-function doHideNotification(id) {
-  return {
-    type: NOTIFICATION_HIDE,
-    id
-  };
-}
 
 // schemas
 const todoSchema = new schema.Entity("todo");
@@ -130,11 +118,9 @@ export function doSetFilter(filter) {
   };
 }
 export function doAddTodoWithNotification(id, name) {
-  return function (dispatch) {
-    dispatch(doAddTodo(id, name));
-    setTimeout(function () {
-      dispatch(doHideNotification(id));
-    }, 5000);
+  return {
+    type: TODO_ADD_WITH_NOTIFICATION,
+    todo: { id, name }
   };
 }
 
@@ -145,22 +131,28 @@ const rootReducer = combineReducers({
   notificationState: notificationReducer
 });
 const logger = createLogger();
+const saga = createSagaMiddleware();
 export const Store = createStore(
   rootReducer,
   undefined,
-  applyMiddleware(thunk, logger)
+  applyMiddleware(saga, logger)
 );
+saga.run(watchAddTodoWithNotification);
 
-// // with thunk function
-// let naiveId = 0;
-// function showNotificationWithDelay(text) {
-//   return function (dispatch) {
-//     dispatch(doShowNotification(text, naiveId));
-//     setTimeout(() => {
-//       dispatch(doHideNotification(naiveId));
-//     }, 1000);
-//     naiveId++;
-//   };
-// }
-
-// Store.dispatch(showNotificationWithDelay("Todo created."));
+// sagas
+function* watchAddTodoWithNotification() {
+  yield takeEvery(TODO_ADD_WITH_NOTIFICATION, handleAddTodoWithNotification);
+}
+function* handleAddTodoWithNotification(action) {
+  const { todo } = action;
+  const { id, name } = todo;
+  yield put(doAddTodo(id, name));
+  yield delay(5000);
+  yield put(doHideNotification(id));
+}
+function doHideNotification(id) {
+  return {
+    type: NOTIFICATION_HIDE,
+    id
+  };
+}
